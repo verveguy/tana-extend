@@ -1,0 +1,11 @@
+{
+  "appName": {
+      "message": "Tana Extension"
+  },
+  "appShortName": {
+      "message": "Tana Extension"
+  },
+  "appDescription": {
+      "message": "Extension for working in Tana"
+  }
+}

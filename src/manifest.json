@@ -1,0 +1,58 @@
+{
+  "name": "__MSG_appName__",
+  "short_name": "__MSG_appShortName__",
+  "description": "__MSG_appDescription__",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "homepage_url": "https://github.com/verveguy/tana-extend",
+  "default_locale": "en",
+  "minimum_chrome_version": "88",
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "clipboardWrite",
+    "clipboardRead"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "128": "assets/clip2tana-128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/clip2tana-16.png",
+      "24": "assets/clip2tana-24.png",
+      "32": "assets/clip2tana-32.png",
+      "128": "assets/clip2tana-128.png",
+      "512": "assets/clip2tana-512.png"
+    },
+    "default_title": "__MSG_appName__"
+  },
+  "commands": {
+    "tana-extend": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Run Tana Extend"
+    },
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      }
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
+}
