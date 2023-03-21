@@ -15,9 +15,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       .then(() => {
         //setIsLoading(false);
         console.log("Summarize DONE");
-        sendResponse({ result: "tana-extend-result"});
       });
-    return true; // signal we will send async responses
   }
   // helper messages for getting/setting clipboard
   else if (request.command === "get-clipboard") {
