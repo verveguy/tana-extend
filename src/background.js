@@ -4,12 +4,53 @@
 
   From here we execute the content.js script against the active tab when the 
   extension is invoked.
+
+  The code is built via webpack, allowing us to include external modules
+
+  See App.tsx for an overview of how this code interacts with the browser
+  tab and the injected content.js script generated from the React app.
 */
 
 import { OpenAIClient } from 'openai-fetch';
 import openaiapikey from './openai.apikey.config.js';
 
 const openai = new OpenAIClient({ apiKey: openaiapikey });
+
+// anything needed at extension startup time, add it here
+chrome.runtime.onInstalled.addListener(() => {
+  console.log("Installed tana_extend");
+  // mark our extension to say we're alive
+  // chrome.action.setBadgeText({
+  //   text: "AWAKE",
+  // });
+});
+
+// Add our main listener for extension activation via the icon
+chrome.action.onClicked.addListener(async (tab) => {
+  console.log("Got click action");
+  // invoke the main code within the context of the foreground 
+  // chrome tab process. Note we do not expect a response from
+  // this message
+  sendInvokeMessage({ command: "tana-extend" })
+    .then(() => { console.log("Click action complete"); });
+});
+
+// and one for keyboard activation of the extension
+chrome.commands.onCommand.addListener((command) => {
+  console.log(`Command: ${command}`);
+  // invoke the main code within the context of the foreground 
+  // chrome tab process. Note we do not expect a response from
+  // this message
+  sendInvokeMessage({ command: "tana-extend" })
+    .then(() => { console.log("Command action complete"); });
+});
+
+
+/* 
+  helper functions related to our use of content.js to do various operations
+  and the required messaging back and forth to the React app contained within
+  content.js
+*/
 
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
@@ -18,6 +59,7 @@ async function getCurrentTab() {
   return tab;
 }
 
+// send a message to the React app in content.js in the browser tab
 async function sendInvokeMessage(message, tab = undefined) {
   console.log(message);
   if (tab === undefined) {
@@ -30,16 +72,23 @@ async function sendInvokeMessage(message, tab = undefined) {
   return {response, tab};
 }
 
-// listen for commands from the content.js script running in the page
+// listen for commands back from the content.js script running in the page
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log(sender.tab ?
     "from a content script:" + sender.tab.url :
     "from the extension");
   console.log(request);
 
+  let cmdfunc = undefined;
+
+  // TODO: make this easily extensible for different command functions
   if (request.command === "chatgpt") {
+    cmdfunc = doChatGPT;
+  }
+
+  if (cmdfunc !== undefined) {
     // invoke the actual function
-    doCommand(doChatGPT)
+    doCommand(cmdfunc)
       .then(() => {
         sendResponse({ response: "happily ever after" });
       });
@@ -47,7 +96,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-// the function that does most of the work
+
+// We wrap the command invocation with get/set clipboard
+// since that the only way to get data in/out of the Tana
+// app at the moment. Note that we wrap the result 
+// with the tana paste `%%tana%%` sentinel. So make sure
+// your commands generate tana-paste format output
+
 async function doCommand(commandFunction) {
   let {response, tab} = await sendInvokeMessage({ command: "get-clipboard" });
   let clipboard = response.clipboard;
@@ -90,26 +145,4 @@ async function doChatGPT(notes) {
   return result ? result : "no result";
 };
 
-// Add our main listener for extension activation
-chrome.action.onClicked.addListener(async (tab) => {
-  console.log("Got click action");
-  // invoke the main code within the context of the foreground 
-  // chrome tab process. 
-  sendInvokeMessage({ command: "tana-extend" })
-    .then(() => { console.log("Click action complete"); });
-});
-
-chrome.commands.onCommand.addListener((command) => {
-  console.log(`Command: ${command}`);
-  sendInvokeMessage({ command: "tana-extend" })
-    .then(() => { console.log("Command action complete"); });
-});
-
-chrome.runtime.onInstalled.addListener(() => {
-  console.log("Installed tana_extend");
-  // mark our extension to say we're alive
-  // chrome.action.setBadgeText({
-  //   text: "WOKE",
-  // });
-});
 
