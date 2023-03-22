@@ -12,9 +12,6 @@
 */
 
 import { OpenAIClient } from 'openai-fetch';
-import openaiapikey from './openai.apikey.config.js';
-
-const openai = new OpenAIClient({ apiKey: openaiapikey });
 
 // anything needed at extension startup time, add it here
 chrome.runtime.onInstalled.addListener(() => {
@@ -114,10 +111,34 @@ async function doCommand(commandFunction) {
   await sendInvokeMessage({ command: "set-clipboard", clipboard: data }, tab);
 }
 
+//import openaiapikey from './openai.apikey.config.js';
+
+let configuration  = {};
+
+let openai = undefined;
+
+// Watch for changes to the user's configuration & apply them
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && changes.configuration?.newValue) {
+    configuration = changes.configuration.newValue;
+    openai = new OpenAIClient({ apiKey: configuration.openAIAPIKey });
+  }
+});
+
+// read our stored configuration, if any
+chrome.storage.sync.get("configuration").then((data) => {
+  Object.assign(configuration, data.configuration);
+  if (configuration?.openAIAPIKey)
+    openai = new OpenAIClient({ apiKey: configuration.openAIAPIKey });
+});
+
 // call ChatGPT to summarize things
 async function doChatGPT(notes) {
   console.log("Call ChatGPT");
   let response;
+
+  if (openai === undefined)
+    return "Please set OpenAI API Key in configuration";
 
   const request = {
     // model: "text-davinci-003",
@@ -134,7 +155,7 @@ async function doChatGPT(notes) {
     response = await openai.createChatCompletion(request);
   }
   catch (err) {
-    console.error("OpenAI error" + err);
+    console.error("OpenAI error: " + err);
   }
 
   console.log(response);

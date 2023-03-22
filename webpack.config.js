@@ -5,7 +5,7 @@ module.exports = {
   // Entry files for our content inject, popup and background pages
   entry: {
     content: "./src/index.tsx",
-    //popup: './src/popup.js',
+    popup: './src/configure.tsx',
     background: './src/background.js'
   },
   output: {
@@ -41,6 +41,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: './src/manifest.json' },
+        { from: './src/popup.html' },
         { context: './src/assets/locales', from: '**', to: '_locales/' },
         { context: './src/assets/', from: '*.png', to: 'assets/' }
       ]
