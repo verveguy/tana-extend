@@ -134,6 +134,7 @@ const App = () => {
               onChange={(event: any, newValue: string | null) => { handleCommandChange(newValue); }}
               renderInput={(params) => (
                 <TextField {...params}
+                  className="tana-extend-input"
                   autoFocus
                   onKeyDown={handleKeyDown}
                   onChange={loadOptions}

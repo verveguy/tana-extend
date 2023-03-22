@@ -27,13 +27,19 @@ globalStyles.innerHTML = `
     transform: translate(-50%, -50%);
     z-index: 99999999;
     }
+
   #tana-extend {
     background: #ffffff;
     padding: 10px;
     border-radius: 10px;
   }
-  #:r0: {
+
+  #tana-extend input {
     background: #ffffff;
+  }
+
+  #tana-extend input, select, textarea{
+    color: #000000;
   }
 `;
 
