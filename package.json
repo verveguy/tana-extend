@@ -1,11 +1,11 @@
 {
-  "name": "react-chrome-app",
+  "name": "tana-extend",
   "version": "0.1.0",
   "license": "MIT",
   "author": "Brett Adam",
   "repository": {
     "type": "git",
-    "url": "ENTER GIT REPO URL"
+    "url": "https://github.com/verveguy/tana-extend"
   },
   "private": true,
   "dependencies": {
@@ -30,11 +30,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "webpack",
-    "build-react": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "build": "webpack"
   },
   "eslintConfig": {
     "extends": [
