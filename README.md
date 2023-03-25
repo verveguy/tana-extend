@@ -37,3 +37,5 @@ Checkout the source and use `yarn install` then `yarn build`. The extension will
 
 You can also `yarn build watch` to make it easier as you hack on the code. Just remember to update
 the extension via the Chrome extensions panel each time you do. 
+
+# If anyone knows how to get VSCode debugging of Chrome Extensions built with Typescript to actually work, please let me know!
