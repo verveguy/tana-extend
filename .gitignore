@@ -25,3 +25,4 @@ dist
 src/openapikey.config.js
 src/openai.apikey.config.js
 tana-extend.zip
+release*.zip

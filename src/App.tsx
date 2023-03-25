@@ -32,7 +32,7 @@ import { TextField, Autocomplete } from "@mui/material";
 
 
 const App = () => {
-  const [runningCount, setRunningCount] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
   const [commandString, setCommandString] = useState("");
@@ -54,6 +54,9 @@ const App = () => {
 
   function listenForMessages(request: any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) {
 
+    // tell our inject code in main world
+    window.postMessage({ command: request.command }, "*");
+    console.log("posted message to window");
     // initial invocation message handler
     if (request.command === "tana-extend") {
       // TODO: ask the user what command to run
@@ -62,6 +65,7 @@ const App = () => {
     }
     // helper messages for getting/setting clipboard
     else if (request.command === "get-clipboard") {
+
       navigator.clipboard.readText()
         .then((result) => {
           sendResponse({ result: "get-clipboard-result", clipboard: result });
@@ -96,7 +100,15 @@ const App = () => {
         chrome.runtime.onMessage.removeListener(listenForMessages);
       }
     }
-  }); 
+  });
+
+  useEffect(() => {
+    // ask our web worker to do the actual work
+    chrome.runtime.sendMessage({ command: commandString })
+      .then(() => {
+        setIsRunning(false);
+      });
+  }, [isRunning]);
 
   function handleCommandChange(option: any | null) {
     setIsPrompting(false);
@@ -105,24 +117,26 @@ const App = () => {
       setCommandString("");
     }
     else {
-      setRunningCount(runningCount+1);
-
-      // ask our web worker to do the actual work
-      chrome.runtime.sendMessage({ command: option.command })
-        .then(() => {
-          setRunningCount(runningCount-1);
-        });
+      setIsRunning(true);
+      setCommandString(option.command);
+      // // ask our web worker to do the actual work
+      // chrome.runtime.sendMessage({ command: option.command })
+      //   .then(() => {
+      //     setIsRunning(false);
+      //   });
     }
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key == "Escape") {
-      handleCommandChange(null);
+      setCommandString("");
+      setIsRunning(false);
+      setIsPrompting(false);
     }
   };
 
   // super simple React UI at this point
-  if (isPrompting && runningCount == 0) {
+  if (isPrompting && !isRunning) {
     return (
       <div id='tana-extend'>
         <header>
@@ -150,7 +164,7 @@ const App = () => {
       </div>
     );
   }
-  else if (runningCount > 0) {
+  else if (isRunning) {
     return (
       <div id='tana-extend'>
         <header>
