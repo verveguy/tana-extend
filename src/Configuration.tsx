@@ -11,6 +11,10 @@ type ConfigElements = { [index: string]: ConfigEntry };
 type ConfigurationEntry = { key: string, label: string, properties: ConfigElements };
 type Configuration = { [index: string]: ConfigurationEntry };
 
+
+// TODO: break this down so it can be built up in pieces from individual 
+// imported modules.
+
 const initial_config: Configuration = {
   chatGPT: {
     key: "chatGPT",

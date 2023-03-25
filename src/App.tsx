@@ -32,25 +32,27 @@ import { TextField, Autocomplete } from "@mui/material";
 
 
 const App = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [runningCount, setRunningCount] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
   const [commandString, setCommandString] = useState("");
   const [myOptions, setMyOptions] = useState<any[]>([])
 
+
+  //TODO: make the options loadable via importing commands packaged/
+  // as modules.
+
   const loadOptions = () => {
     let options: any[] = [];
     options.push({ label: "Invoke Chat GPT with prompt", command: "chatgpt" });
-    options.push({ label: "Summarize using ChatGPT", command: "chatgpt" });
-    options.push({ label: "Clip current website to Tana", command: "clip2tana" });
-    options.push({ label: "Save all tabs to Tana", command: "tabs2tana" });
+    options.push({ label: "Summarize using ChatGPT", command: "summarize" });
+    // TODO: roll clip2tana and tabs2Tana in properly
+    //options.push({ label: "Clip current website to Tana", command: "clip2tana" });
+    //options.push({ label: "Save all tabs to Tana", command: "tabs2tana" });
     setMyOptions(options);
   }
 
   function listenForMessages(request: any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) {
-    console.log(sender.tab ?
-      "from a content script:" + sender.tab.url :
-      "from the worker");
 
     // initial invocation message handler
     if (request.command === "tana-extend") {
@@ -62,7 +64,6 @@ const App = () => {
     else if (request.command === "get-clipboard") {
       navigator.clipboard.readText()
         .then((result) => {
-          console.log("SENDING RESPONSE" + result);
           sendResponse({ result: "get-clipboard-result", clipboard: result });
         });
       return true; // signal that we will send async responses
@@ -71,7 +72,6 @@ const App = () => {
       let data = request.clipboard;
       navigator.clipboard.writeText(data)
         .then(() => {
-          console.log("SENDING RESPONSE");
           sendResponse({ result: "set-clipboard-result" });
         });
       return true; // signal that we will send async responses
@@ -79,6 +79,9 @@ const App = () => {
   }
 
   // we need to install our message listener on component startup (mount)
+  // TODO: see if this can be made one-time. I think it's being called
+  // after every render. Trying to fence on isListening doesn't work
+  // (it goes deaf)
   useEffect(() => {
     if (!isListening) {
       chrome.runtime.onMessage.addListener(listenForMessages);
@@ -93,24 +96,21 @@ const App = () => {
         chrome.runtime.onMessage.removeListener(listenForMessages);
       }
     }
-  });
+  }); 
 
   function handleCommandChange(option: any | null) {
-    console.log(option)
     setIsPrompting(false);
 
     if (option === null) {
       setCommandString("");
     }
     else {
-      setIsLoading(true);
+      setRunningCount(runningCount+1);
 
-      console.log("INVOKING " + option.command);
       // ask our web worker to do the actual work
       chrome.runtime.sendMessage({ command: option.command })
         .then(() => {
-          setIsLoading(false);
-          console.log("DONE " + option.command);
+          setRunningCount(runningCount-1);
         });
     }
   }
@@ -122,7 +122,7 @@ const App = () => {
   };
 
   // super simple React UI at this point
-  if (isPrompting) {
+  if (isPrompting && runningCount == 0) {
     return (
       <div id='tana-extend'>
         <header>
@@ -150,7 +150,7 @@ const App = () => {
       </div>
     );
   }
-  else if (isLoading) {
+  else if (runningCount > 0) {
     return (
       <div id='tana-extend'>
         <header>

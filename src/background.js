@@ -24,7 +24,6 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Add our main listener for extension activation via the icon
 chrome.action.onClicked.addListener(async (tab) => {
-  console.log("Got click action");
   // invoke the main code within the context of the foreground 
   // chrome tab process. Note we do not expect a response from
   // this message
@@ -34,7 +33,6 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 // and one for keyboard activation of the extension
 chrome.commands.onCommand.addListener((command) => {
-  console.log(`Command: ${command}`);
   // invoke the main code within the context of the foreground 
   // chrome tab process. Note we do not expect a response from
   // this message
@@ -58,29 +56,24 @@ async function getCurrentTab() {
 
 // send a message to the React app in content.js in the browser tab
 async function sendInvokeMessage(message, tab = undefined) {
-  console.log(message);
   if (tab === undefined) {
-    console.log("Getting tab");
     tab = await getCurrentTab();
   }
   const response = await chrome.tabs.sendMessage(tab.id, message);
-  // do something with response here, not outside the function
-  console.log(response);
   return {response, tab};
 }
 
 // listen for commands back from the content.js script running in the page
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log(sender.tab ?
-    "from a content script:" + sender.tab.url :
-    "from the extension");
-  console.log(request);
 
   let cmdfunc = undefined;
 
   // TODO: make this easily extensible for different command functions
   if (request.command === "chatgpt") {
     cmdfunc = doChatGPT;
+  }
+  else if (request.command === "summarize") {
+    cmdfunc = doChatGPTSummarize;
   }
 
   if (cmdfunc !== undefined) {
@@ -119,8 +112,6 @@ let openai = undefined;
 
 // Watch for changes to the user's configuration & apply them
 chrome.storage.onChanged.addListener((changes, area) => {
-  console.log(changes);
-  console.log("apiKey: "+ configuration.chatGPT.properties.openAIAPIKey.value);
   if (area === 'sync' && changes.configuration) {
     configuration = changes.configuration.newValue;
     const apiKey = configuration.chatGPT.properties.openAIAPIKey.value;
@@ -137,37 +128,46 @@ chrome.storage.sync.get("configuration").then((data) => {
   }
 });
 
-// call ChatGPT to summarize things
+// call ChatGPT to prcess an arbitrary prompt
 async function doChatGPT(notes) {
-  console.log("Call ChatGPT");
-  let response;
-
-  if (openai === undefined)
-    return "Please set OpenAI API Key in configuration";
-
   const request = {
-    // model: "text-davinci-003",
     model: configuration.chatGPT.properties.chatGPTModel.value,
     messages: [
       { role: "system", content: "You are a diligent note taker" },
       { role: "user", content: notes },
     ]
   };
+  return callChatGPT(request);
+};
 
-  console.log(request);
+// call ChatGPT to summarie the notes
+async function doChatGPTSummarize(notes) {
+  const request = {
+    model: configuration.chatGPT.properties.chatGPTModel.value,
+    messages: [
+      { role: "system", content: "You are a diligent note taker" },
+      { role: "user", content: "Please summarize the following notes in bullet point form.\n"+notes },
+    ]
+  };
+  return callChatGPT(request);
+};
+
+
+async function callChatGPT(request) {
+  let response;
+
+  if (openai === undefined)
+    return "Please set OpenAI API Key in configuration";
 
   try {
     response = await openai.createChatCompletion(request);
   }
   catch (err) {
     console.error("OpenAI error: " + err);
+    return "OpenAI error: " + err;
   }
 
-  console.log(response);
-
   const result = response ? response.message.content : "(error)";
-  console.log("ChatGPT returned");
-  console.log(result);
   return result ? result : "no result";
 };
 
