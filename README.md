@@ -33,7 +33,7 @@ the extension icon in the Chrome or Tana toolbar to access.
 Looking for feedback, sugestions, pull requests and ideas for further commands, please!
 
 ## Building
-Checkout the source and use `yarn install` then `yarn build`
+Checkout the source and use `yarn install` then `yarn build`. The extension will be in `dist/`
 
 You can also `yarn build watch` to make it easier as you hack on the code. Just remember to update
 the extension via the Chrome extensions panel each time you do. 
