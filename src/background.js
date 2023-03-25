@@ -119,17 +119,22 @@ let openai = undefined;
 
 // Watch for changes to the user's configuration & apply them
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'sync' && changes.configuration?.newValue) {
+  console.log(changes);
+  console.log("apiKey: "+ configuration.chatGPT.properties.openAIAPIKey.value);
+  if (area === 'sync' && changes.configuration) {
     configuration = changes.configuration.newValue;
-    openai = new OpenAIClient({ apiKey: configuration.openAIAPIKey });
+    const apiKey = configuration.chatGPT.properties.openAIAPIKey.value;
+    openai = apiKey ? new OpenAIClient({ apiKey: apiKey }) : undefined;
   }
 });
 
 // read our stored configuration, if any
 chrome.storage.sync.get("configuration").then((data) => {
   Object.assign(configuration, data.configuration);
-  if (configuration?.openAIAPIKey)
-    openai = new OpenAIClient({ apiKey: configuration.openAIAPIKey });
+  if (configuration) {
+    const apiKey = configuration.chatGPT.properties.openAIAPIKey.value;
+    openai = apiKey ? new OpenAIClient({ apiKey: apiKey }) : undefined;
+  }
 });
 
 // call ChatGPT to summarize things
@@ -142,7 +147,7 @@ async function doChatGPT(notes) {
 
   const request = {
     // model: "text-davinci-003",
-    model: "gpt-3.5-turbo",
+    model: configuration.chatGPT.properties.chatGPTModel.value,
     messages: [
       { role: "system", content: "You are a diligent note taker" },
       { role: "user", content: notes },

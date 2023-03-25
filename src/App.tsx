@@ -40,7 +40,10 @@ const App = () => {
 
   const loadOptions = () => {
     let options: any[] = [];
-    options.push({ label: "Invoke Chat CPT", command: "chatgpt" });
+    options.push({ label: "Invoke Chat GPT with prompt", command: "chatgpt" });
+    options.push({ label: "Summarize using ChatGPT", command: "chatgpt" });
+    options.push({ label: "Clip current website to Tana", command: "clip2tana" });
+    options.push({ label: "Save all tabs to Tana", command: "tabs2tana" });
     setMyOptions(options);
   }
 
@@ -121,7 +124,7 @@ const App = () => {
   // super simple React UI at this point
   if (isPrompting) {
     return (
-      <div id="tana-extend">
+      <div id='tana-extend'>
         <header>
           <div>
             <Autocomplete
@@ -149,7 +152,7 @@ const App = () => {
   }
   else if (isLoading) {
     return (
-      <div>
+      <div id='tana-extend'>
         <header>
           <div>
             <h2>Running {commandString} ...</h2>
