@@ -23,7 +23,7 @@ https://user-images.githubusercontent.com/82237/227679044-8e27c744-aab0-40c5-a54
 
 ## Installing
 You'll need to download the latest release.zip and then use the Developer mode in Chrome
-to add this extension as a `Load Unpacked`. Go to `chrome://extensions` and turn on Developer mode
+to add this extension as a `Load Unpacked`. Go to `chrome://extensions` and turn on Developer mode.
 I'll get around to pushing this to the Chrome Extension Store when it's good and ready.
 
 ## Configuration
@@ -38,4 +38,4 @@ Checkout the source and use `yarn install` then `yarn build`. The extension will
 You can also `yarn build watch` to make it easier as you hack on the code. Just remember to update
 the extension via the Chrome extensions panel each time you do. 
 
-# If anyone knows how to get VSCode debugging of Chrome Extensions built with Typescript to actually work, please let me know!
+## If anyone knows how to get VSCode debugging of Chrome Extensions built with Typescript to actually work, please let me know!
