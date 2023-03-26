@@ -7,17 +7,6 @@
   "homepage_url": "https://github.com/verveguy/tana-extend",
   "default_locale": "en",
   "minimum_chrome_version": "88",
-  "permissions": [
-    "storage",
-    "scripting",
-    "activeTab",
-    "clipboardWrite",
-    "clipboardRead"
-  ],
-  "background": {
-    "service_worker": "background.js",
-    "type": "module"
-  },
   "icons": {
     "128": "assets/clip2tana-128.png"
   },
@@ -47,14 +36,25 @@
       }
     }
   },
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab",
+    "clipboardWrite",
+    "clipboardRead"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ]
+      "js": ["content.js"],
+      "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "web_accessible_resources": [{
+    "resources": ["inject.js"],
+    "matches": ["<all_urls>"]
+  }]
 }

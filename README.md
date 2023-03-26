@@ -30,7 +30,7 @@ I'll get around to pushing this to the Chrome Extension Store when it's good and
 Configuration of each command is available via the extension pop-up UI. Just click
 the extension icon in the Chrome or Tana toolbar to access.
 
-Looking for feedback, sugestions, pull requests and ideas for further commands, please!
+Looking for feedback, suggestions, pull requests and ideas for further commands, please!
 
 ## Building
 Checkout the source and use `yarn install` then `yarn build`. The extension will be in `dist/`

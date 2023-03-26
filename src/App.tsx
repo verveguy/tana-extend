@@ -102,12 +102,15 @@ const App = () => {
     }
   });
 
+  // when isRunning toggles state...
   useEffect(() => {
-    // ask our web worker to do the actual work
-    chrome.runtime.sendMessage({ command: commandString })
-      .then(() => {
-        setIsRunning(false);
-      });
+    if (isRunning) {
+      // ask our web worker to do the actual work
+      chrome.runtime.sendMessage({ command: commandString })
+        .then(() => {
+          setIsRunning(false);
+        });
+    }
   }, [isRunning]);
 
   function handleCommandChange(option: any | null) {

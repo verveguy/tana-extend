@@ -42,6 +42,7 @@ module.exports = {
       patterns: [
         { from: './src/manifest.json' },
         { from: './src/popup.html' },
+        { from: './src/inject.js' },
         { context: './src/assets/locales', from: '**', to: '_locales/' },
         { context: './src/assets/', from: '*.png', to: 'assets/' }
       ]

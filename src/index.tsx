@@ -9,6 +9,14 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 
+// inject our code that runs inside the main world
+let inject = document.createElement('script');
+inject.src = chrome.runtime.getURL('inject.js');
+inject.onload = function() {
+    inject.remove();  // TODO: check this. Original was this.remove()
+};
+(document.head || document.documentElement).appendChild(inject);
+
 const rootElement = document.createElement("div");
 rootElement.id = "react-chrome-app";
 
