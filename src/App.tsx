@@ -29,39 +29,49 @@
 
 import React, { useEffect, useState } from "react";
 import { TextField, Autocomplete } from "@mui/material";
+import { Configuration, CommandDeclaration } from "./ConfigurationTypes";
+
+import chatGPTConfig from './ChatGPT';
+import clip2tanaConfig from "./Clip2Tana";
+
 
 
 const App = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
-  const [commandString, setCommandString] = useState("");
+  const [command, setCommand] = useState<CommandDeclaration | undefined>(undefined);
   const [myOptions, setMyOptions] = useState<any[]>([])
+  const [configuration, setConfiguration] = useState<Configuration | undefined>(undefined);
+  const [isConfigured, setIsConfigured] = useState(false);
 
 
   //TODO: make the options loadable via importing commands packaged/
   // as modules.
 
   const loadOptions = () => {
-    let options: any[] = [];
-    options.push({ label: "Invoke Chat GPT with prompt", command: "chatgpt" });
-    options.push({ label: "Summarize using ChatGPT", command: "summarize" });
+    let options: CommandDeclaration[] = [];
+    options.push(...chatGPTConfig.commands);
+    options.push(...clip2tanaConfig.commands);
     // TODO: roll clip2tana and tabs2Tana in properly
-    //options.push({ label: "Clip current website to Tana", command: "clip2tana" });
     //options.push({ label: "Save all tabs to Tana", command: "tabs2tana" });
     setMyOptions(options);
   }
 
   function listenForMessages(request: any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) {
+    const config = request?.configuration;
+    const command = request?.command;
 
     // tell our inject code in main world
-    window.postMessage({ command: request.command }, "*");
-    console.log("posted message to window");
+    window.postMessage({ command: command }, "*");
+
     // initial invocation message handler
-    if (request.command === "tana-extend") {
-      // TODO: ask the user what command to run
-      // for now assume it is 'chatgpt'
+    if (command === "tana-extend") {
       setIsPrompting(true);
+      // save the configuration passed in
+      setConfiguration(config);
+      const configNotEmpty = (config !== undefined) && (Object.entries(config).length !== 0);
+      setIsConfigured(configNotEmpty);
     }
     // helper messages for getting/setting clipboard
     else if (request.command === "get-clipboard") {
@@ -81,6 +91,7 @@ const App = () => {
       return true; // signal that we will send async responses
     }
   }
+
 
   // we need to install our message listener on component startup (mount)
   // TODO: see if this can be made one-time. I think it's being called
@@ -106,40 +117,81 @@ const App = () => {
   useEffect(() => {
     if (isRunning) {
       // ask our web worker to do the actual work
-      chrome.runtime.sendMessage({ command: commandString })
-        .then(() => {
-          setIsRunning(false);
-        });
+      invokeCommand(command, setIsRunning);
     }
   }, [isRunning]);
+
+
+  // execute the selected command locally within this tab
+  // since it needs acccess to tab-scoped functions / data
+  const doContentCommand = (command: CommandDeclaration) => {
+    return navigator.clipboard.readText()
+      .then((clipboard) => {
+        // munge the clipboard data
+        let data = command.doCommand(clipboard, configuration)
+          .then((data) => {
+            data = "%%tana%%\n" + data;
+
+            navigator.clipboard.writeText(data);
+          })
+      });
+  };
+
+
+  const invokeCommand = (command: CommandDeclaration | undefined, setIsRunning: React.Dispatch<React.SetStateAction<boolean>>) => {
+    if (command?.isContentScript) {
+      doContentCommand(command).then(() => {
+        setIsRunning(false);
+      });
+    }
+    else {
+      // get background.js to do the work
+      chrome.runtime.sendMessage({ command: "invoke-command", option: command }).then(() => {
+        setIsRunning(false);
+      });
+    }
+  };
 
   function handleCommandChange(option: any | null) {
     setIsPrompting(false);
 
     if (option === null) {
-      setCommandString("");
+      setCommand(undefined);
     }
     else {
       setIsRunning(true);
-      setCommandString(option.command);
-      // // ask our web worker to do the actual work
-      // chrome.runtime.sendMessage({ command: option.command })
-      //   .then(() => {
-      //     setIsRunning(false);
-      //   });
+      setCommand(option);
     }
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key == "Escape") {
-      setCommandString("");
+      setCommand(undefined);
       setIsRunning(false);
       setIsPrompting(false);
     }
   };
 
+  const clearWarning = (event: React.MouseEvent) => {
+    setIsPrompting(false);
+    setIsRunning(false);
+  }
+
   // super simple React UI at this point
-  if (isPrompting && !isRunning) {
+  if (!isConfigured && isPrompting) {
+    return (
+      <div id='tana-extend' onClick={clearWarning}>
+        <header>
+          <div className="config-warning">
+            <p style={{userSelect: 'none'}}>
+              Please configure extension first using extension button
+            </p>
+          </div>
+        </header>
+      </div>
+    );
+  }
+  else if (isPrompting && !isRunning) {
     return (
       <div id='tana-extend'>
         <header>
@@ -151,7 +203,7 @@ const App = () => {
               autoHighlight
               options={myOptions}
               getOptionLabel={(option: any) => option.label}
-              onChange={(event: any, newValue: string | null) => { handleCommandChange(newValue); }}
+              onChange={(event: any, newValue: any | null) => { handleCommandChange(newValue); }}
               renderInput={(params) => (
                 <TextField {...params}
                   autoFocus
@@ -169,10 +221,11 @@ const App = () => {
   }
   else if (isRunning) {
     return (
-      <div id='tana-extend'>
-        <header>
-          <div>
-            <h2>Running {commandString} ...</h2>
+      <div id='tana-extend' onClick={clearWarning}>
+       <header>
+          <div className="progress-msg">
+            <p style={{userSelect: 'none'}}>
+              Running {command?.command} ...</p>
           </div>
         </header>
       </div>
@@ -182,3 +235,4 @@ const App = () => {
 }
 
 export default App;
+

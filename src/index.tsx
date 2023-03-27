@@ -18,7 +18,7 @@ inject.onload = function() {
 (document.head || document.documentElement).appendChild(inject);
 
 const rootElement = document.createElement("div");
-rootElement.id = "react-chrome-app";
+rootElement.id = "tana-extension";
 
 const globalStyles = document.createElement("style");
 
@@ -46,7 +46,15 @@ globalStyles.innerHTML = `
     background: #ffffff;
   }
 
-  #tana-extend input, select, textarea{
+  #tana-extend input, select, textarea {
+    color: #000000;
+  }
+
+  #tana-extend .config-warning {
+    color: #000000;
+  }
+
+  #tana-extend .progress-msg {
     color: #000000;
   }
 `;

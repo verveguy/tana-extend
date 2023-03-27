@@ -18,10 +18,10 @@ function invokeDocumentCopy() {
 (() => {
   window.addEventListener("message",
     function (event) {
-      console.log("GOT MESSAGE: " + event.data.command);
-      const command = event.data.command;
+      const command = event.data?.command;
       // initial invocation message handler
       if (command === "tana-extend") {
+        // console.log("GOT MESSAGE: " + event.data.command);
         // TODO: ask the user what command to run
         // for now assume it is 'chatgpt'
         invokeDocumentCopy();
@@ -32,5 +32,5 @@ function invokeDocumentCopy() {
       else if (command === "set-clipboard") {
       }
     });
-  console.log("GOT INSIDE");
+  //console.log("GOT INSIDE");
 })();
